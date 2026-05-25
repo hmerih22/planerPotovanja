@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="sl">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Rezultati</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static',
+          filename='style.css') }}">
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Najboljše destinacije</h1>
+
+    {% for d in destinacije %}
+
+    <div class="kartica">
+
+        <h2>{{ d.ime }}</h2>
+
+        <p>
+            Skupna cena:
+            {{ d.cena }} €
+        </p>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+</body>
+</html>

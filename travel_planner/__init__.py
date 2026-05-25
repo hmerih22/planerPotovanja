@@ -1,0 +1,1 @@
+"""Travel planning model package."""

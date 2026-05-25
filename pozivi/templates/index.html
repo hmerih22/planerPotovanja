@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="sl">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Načrtovanje potovanj</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static',
+          filename='style.css') }}">
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Načrtovanje potovanja</h1>
+
+    <form action="/rezultati"
+          method="POST">
+
+        <input type="number"
+               name="proracun"
+               placeholder="Proračun">
+
+        <input type="number"
+               name="dnevi"
+               placeholder="Število dni">
+
+        <input type="number"
+               name="osebe"
+               placeholder="Število oseb">
+
+        <button type="submit">
+            Izračunaj
+        </button>
+
+    </form>
+
+</div>
+
+</body>
+</html>

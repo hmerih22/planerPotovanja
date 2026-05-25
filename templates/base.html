@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="sl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Planer potovanja{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: "#172026",
+            moss: "#4f6f52",
+            clay: "#b86f52",
+            mist: "#eef3f0"
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="min-h-screen bg-stone-50 text-ink antialiased">
+  <header class="border-b border-stone-200 bg-white">
+    <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+      <a href="{{ url_for('index') }}" class="text-lg font-semibold tracking-normal text-ink">Planer potovanja</a>
+      <div class="flex items-center gap-2">
+        {% if g.user %}
+          <span class="hidden text-sm font-medium text-stone-600 sm:inline">{{ g.user.name }}</span>
+          <form action="{{ url_for('refresh_data') }}" method="post">
+            <button class="rounded-lg border border-stone-300 px-3 py-2 text-sm font-medium text-stone-700 hover:border-moss hover:text-moss" type="submit">
+              Osveži podatke
+            </button>
+          </form>
+          <form action="{{ url_for('logout') }}" method="post">
+            <button class="rounded-lg bg-stone-900 px-3 py-2 text-sm font-medium text-white hover:bg-stone-700" type="submit">
+              Odjava
+            </button>
+          </form>
+        {% else %}
+          <a class="rounded-lg border border-stone-300 px-3 py-2 text-sm font-medium text-stone-700 hover:border-moss hover:text-moss" href="{{ url_for('login') }}">Prijava</a>
+          <a class="rounded-lg bg-moss px-3 py-2 text-sm font-medium text-white hover:bg-moss/90" href="{{ url_for('register') }}">Registracija</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+  <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="mb-5 grid gap-2">
+          {% for category, message in messages %}
+            <div class="rounded-lg border px-4 py-3 text-sm font-medium {% if category == 'error' %}border-red-200 bg-red-50 text-red-700{% else %}border-emerald-200 bg-emerald-50 text-emerald-700{% endif %}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
