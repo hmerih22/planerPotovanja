@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS trip_requests (
 CREATE TABLE IF NOT EXISTS trip_recommendations (
     id INT AUTO_INCREMENT PRIMARY KEY,
     request_id INT NOT NULL,
-    rank_number INT NOT NULL,
+    rank INT NOT NULL,
     country_id INT NOT NULL,
     total_cost_eur DECIMAL(10,2) NOT NULL,
     budget_delta_eur DECIMAL(10,2) NULL,

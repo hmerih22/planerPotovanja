@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+import os
 import sqlite3
 from pathlib import Path
+from typing import Any
+
+import pymysql
+from pymysql.cursors import DictCursor
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
@@ -9,7 +14,62 @@ DEFAULT_DB_PATH = DATA_DIR / "travel_model.sqlite3"
 SCHEMA_PATH = BASE_DIR / "schema.sql"
 
 
-def get_connection(db_path: Path | str = DEFAULT_DB_PATH) -> sqlite3.Connection:
+def use_mariadb() -> bool:
+    return bool(os.getenv("DB_HOST"))
+
+
+def translate_sql(sql: str) -> str:
+    if use_mariadb():
+        return sql.replace("?", "%s")
+    return sql
+
+
+class MariaDBConnection:
+    def __init__(self) -> None:
+        self.connection = pymysql.connect(
+            host=os.getenv("DB_HOST", "db"),
+            port=int(os.getenv("DB_PORT", "3306")),
+            user=os.getenv("DB_USER", "travel_user"),
+            password=os.getenv("DB_PASSWORD", "travel_password"),
+            database=os.getenv("DB_NAME", "travel_planner"),
+            cursorclass=DictCursor,
+            autocommit=False,
+        )
+
+    def execute(self, sql: str, params: tuple[Any, ...] | list[Any] = ()) -> Any:
+        cursor = self.connection.cursor()
+        cursor.execute(translate_sql(sql), params)
+        return cursor
+
+    def executemany(self, sql: str, params: list[tuple[Any, ...]]) -> Any:
+        cursor = self.connection.cursor()
+        cursor.executemany(translate_sql(sql), params)
+        return cursor
+
+    def commit(self) -> None:
+        self.connection.commit()
+
+    def rollback(self) -> None:
+        self.connection.rollback()
+
+    def close(self) -> None:
+        self.connection.close()
+
+    def __enter__(self) -> "MariaDBConnection":
+        return self
+
+    def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
+        if exc_type is None:
+            self.commit()
+        else:
+            self.rollback()
+        self.close()
+
+
+def get_connection(db_path: Path | str = DEFAULT_DB_PATH):
+    if use_mariadb():
+        return MariaDBConnection()
+
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
@@ -18,6 +78,9 @@ def get_connection(db_path: Path | str = DEFAULT_DB_PATH) -> sqlite3.Connection:
 
 
 def init_database(db_path: Path | str = DEFAULT_DB_PATH) -> None:
+    if use_mariadb():
+        return
+
     schema = SCHEMA_PATH.read_text(encoding="utf-8")
     with get_connection(db_path) as conn:
         conn.executescript(schema)
@@ -37,6 +100,9 @@ def ensure_auth_schema(db_path: Path | str = DEFAULT_DB_PATH) -> None:
             """
         )
 
+        if use_mariadb():
+            return
+
         trip_request_columns = {
             row["name"]
             for row in conn.execute("PRAGMA table_info(trip_requests)").fetchall()
@@ -48,14 +114,11 @@ def ensure_auth_schema(db_path: Path | str = DEFAULT_DB_PATH) -> None:
 
 
 def database_ready(db_path: Path | str = DEFAULT_DB_PATH) -> bool:
-    path = Path(db_path)
-    if not path.exists():
-        return False
     try:
-        with get_connection(path) as conn:
+        with get_connection(db_path) as conn:
             row = conn.execute("SELECT COUNT(*) AS count FROM countries").fetchone()
             return bool(row and row["count"])
-    except sqlite3.Error:
+    except Exception:
         return False
 
 
