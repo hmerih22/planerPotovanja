@@ -20,7 +20,9 @@ def use_mariadb() -> bool:
 
 def translate_sql(sql: str) -> str:
     if use_mariadb():
-        return sql.replace("?", "%s")
+        sql = sql.replace("INSERT OR IGNORE", "INSERT IGNORE")
+        sql = sql.replace("INSERT OR REPLACE INTO", "REPLACE INTO")
+        sql = sql.replace("?", "%s")
     return sql
 
 
